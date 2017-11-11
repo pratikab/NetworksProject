@@ -1,10 +1,11 @@
 import sys
 import socket
 import select
- 
+import os.path
+
 def chat_client():
     if(len(sys.argv) < 3) :
-        print 'Usage : python client.py hostname port'
+        print 'Usage : python2 client.py hostname port'
         sys.exit()
 
     host = sys.argv[1]
@@ -20,8 +21,6 @@ def chat_client():
         print 'Unable to connect'
         sys.exit()
      
-    # print 'Connected to remote host. You can start sending messages'
-    # sys.stdout.write('[Me] '); sys.stdout.flush()
     var = raw_input("Enter 'Username:Password' - ")
     auth = str(var);
     user = auth.split(":")[0]
@@ -30,13 +29,15 @@ def chat_client():
     buff = s.recv(4096);
     print buff
     if buff == 'Authenticated':
-        print 'Connected to remote host. You can start sending messages'
-        with open('DATA/'+user+'.txt',"r+") as f:
-            data = f.read()
-            if data != '':
-                print data
-            f.write('')
-            f.truncate(0)
+        print 'You can start sending messages now'
+        fname = 'DATA/'+user+'.txt'
+        if os.path.isfile(fname) :
+	        with open(fname,"r+") as f:
+	            data = f.read()
+	            if data != '':
+	                print data
+	            f.write('')
+	            f.truncate(0)
     else:
     	s.close()
     	return 
@@ -47,11 +48,14 @@ def chat_client():
             if sock == s:
                 buff = []
                 buff = s.recv(4096);
+                if buff == "Logout":
+                	s.close()
+                	return
                 print buff;
+
             else :
-                # user entered a message
                 msg = sys.stdin.readline()
                 s.send(msg)
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     sys.exit(chat_client())
